@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecurePass Analyzer</title>
+<style>
+:root{--bg:#eaf0f8;--card:#fff;--ink:#0e1c3a;--mut:#5d6b85;--line:#dbe3ef;--acc:#2a56f0;--acc2:#e8eeff;
+--s0:#d32f2f;--s1:#ef6c00;--s2:#c79a00;--s3:#2e9d62;--s4:#0f7a50;--r:14px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.5}
+header{background:var(--ink);color:#fff}
+.bar{max-width:1120px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;gap:12px}
+.bar svg{flex:none}.bar h1{font-size:1.15rem;margin:0;font-weight:650;letter-spacing:.2px}
+.bar span{margin-left:auto;font-size:.82rem;color:#aebbd6}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 20px 60px;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.card{background:var(--card);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(14,28,58,.06),0 8px 24px rgba(14,28,58,.05)}
+.card h2{font-size:.98rem;margin:0 0 14px;font-weight:650}
+.side{position:sticky;top:16px}
+label{font-size:.85rem;color:var(--mut)}
+.field{display:flex;margin:6px 0 12px;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.field:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc2)}
+.field input{flex:1;border:0;padding:12px;font-size:1rem;outline:0;min-width:0;font-family:inherit}
+.field button{border:0;background:none;color:var(--acc);padding:0 14px;cursor:pointer;font-weight:600}
+.btn{width:100%;padding:12px;border:0;border-radius:10px;background:var(--acc);color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
+.btn:hover{background:#1f45c9}.btn.ghost{background:var(--acc2);color:var(--acc);margin-top:8px}.btn.ghost:hover{background:#d8e2ff}
+button:focus-visible{outline:3px solid #7f9cff;outline-offset:2px}
+.err{color:var(--s0);font-size:.88rem;min-height:1.2em;margin-top:8px}
+.gauge{position:relative;width:200px;margin:18px auto 6px}
+.gauge svg{display:block;transform:rotate(-90deg)}
+.gauge .t{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge b{font-size:2.3rem;line-height:1}.gauge small{color:var(--mut);font-size:.8rem}
+#ring{transition:stroke-dashoffset .7s ease,stroke .4s}
+.verdict{text-align:center;font-weight:700;font-size:1.1rem}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.chips div{background:var(--bg);border-radius:10px;padding:10px 6px;text-align:center}
+.chips b{display:block;font-size:1.1rem}.chips span{font-size:.72rem;color:var(--mut)}
+.main{display:grid;gap:20px}
+.empty{text-align:center;padding:48px 20px;color:var(--mut)}
+.empty h2{font-size:1.2rem;color:var(--ink);margin-bottom:6px}
+.crack{display:grid;gap:14px}
+.crack .top{display:flex;justify-content:space-between;gap:10px;font-size:.9rem}
+.crack .top b{white-space:nowrap}
+.track{height:10px;background:var(--bg);border-radius:6px;overflow:hidden;margin-top:6px}
+.track i{display:block;height:100%;border-radius:6px;width:0;transition:width .7s ease}
+.state{display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;margin-bottom:14px}
+.state.bad{background:#fdecec;color:#9d1c1c}.state.good{background:#e6f5ee;color:#0b5d3b}.state.na{background:#fff4e0;color:#8a5200}
+.state strong{font-size:1.05rem}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0;padding:0;list-style:none;counter-reset:s}
+.flow li{counter-increment:s;background:var(--bg);border-radius:10px;padding:10px;font-size:.8rem;color:var(--mut)}
+.flow li::before{content:counter(s);display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--acc);color:#fff;font-size:.72rem;font-weight:700;margin-bottom:6px}
+.flow li b{display:block;color:var(--ink);font-size:.82rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.pill{display:inline-block;background:var(--acc2);color:var(--acc);border-radius:20px;padding:3px 11px;font-size:.82rem;margin:0 6px 6px 0}
+.pill.none{background:#e6f5ee;color:#0b5d3b}
+ul.tips{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+ul.tips li{padding:10px 12px;background:var(--bg);border-radius:10px;font-size:.9rem;border-left:4px solid var(--acc)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+td{padding:9px 6px;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{width:36%;color:var(--mut)}
+tr.ok td{background:#e6f5ee}tr.ok td:first-child{color:#0b5d3b;font-weight:600}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;word-break:break-all}
+.note{font-size:.82rem;color:var(--mut);margin:10px 0 0}
+[hidden]{display:none!important}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}.side{position:static}.two{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#7f9cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+  <h1>SecurePass Analyzer</h1><span>Runs on your computer. Your password is never stored.</span>
+</div></header>
+
+<div class="wrap">
+  <aside class="card side">
+    <h2>Test a password</h2>
+    <label for="pw">Password</label>
+    <div class="field"><input id="pw" type="password" autocomplete="off" maxlength="72" placeholder="Type or paste here"><button id="toggle" type="button">Show</button></div>
+    <button class="btn" id="go" type="button">Analyze password</button>
+    <button class="btn ghost" id="gen" type="button">Generate a strong one</button>
+    <div class="err" id="msg" role="alert"></div>
+    <div class="gauge">
+      <svg width="200" height="200" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#e5ebf5" stroke-width="10"/><circle id="ring" cx="60" cy="60" r="54" fill="none" stroke="#c3cde0" stroke-width="10" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="339.3"/></svg>
+      <div class="t"><b id="scoreNum">--</b><small>out of 4</small></div>
+    </div>
+    <div class="verdict" id="verdict">Waiting for a password</div>
+    <div class="chips">
+      <div><b id="ent">-</b><span>entropy bits</span></div>
+      <div><b id="len">-</b><span>characters</span></div>
+      <div><b id="pool">-</b><span>symbol pool</span></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <section class="card empty" id="empty">
+      <h2>See your password the way an attacker does</h2>
+      <p>Enter a password and press Analyze. You will get crack times for four attack types, a breach check, and tips to improve it.</p>
+    </section>
+
+    <div class="main" id="result" hidden>
+      <section class="card"><h2>Time to crack</h2><div class="crack" id="times"></div>
+        <p class="note">Bars use a log scale. A longer bar means the attacker needs more time.</p></section>
+
+      <section class="card"><h2>Breach check</h2>
+        <div class="state" id="state"><strong id="stateTxt"></strong></div>
+        <ol class="flow">
+          <li><b>Hash locally</b>SHA-1 is computed on your machine</li>
+          <li><b>Send prefix</b><span id="f2">First 5 characters only</span></li>
+          <li><b>Get candidates</b><span id="f3">Server returns matching hashes</span></li>
+          <li><b>Match locally</b>The server never sees the full hash</li>
+        </ol></section>
+
+      <div class="two">
+        <section class="card"><h2>Patterns found</h2><div id="patterns"></div></section>
+        <section class="card"><h2>How to improve</h2><ul class="tips" id="tips"></ul></section>
+      </div>
+    </div>
+
+    <section class="card"><h2>How a server should store it</h2>
+      <button class="btn ghost" id="hashbtn" type="button" style="margin:0;width:auto;padding:10px 16px">Compare storage methods</button>
+      <table id="hashes" hidden></table><p class="note" id="hashnote" hidden></p></section>
+
+    <section class="card" id="genCard" hidden><h2>Generated for you</h2><table id="genout"></table></section>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const COL=["--s0","--s1","--s2","--s3","--s4"],LAB=["Very weak","Weak","Fair","Strong","Very strong"];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function el(tag,txt,cls){const e=document.createElement(tag);if(txt!==undefined)e.textContent=txt;if(cls)e.className=cls;return e}
+function row(t,a,b,cls){const tr=document.createElement("tr");if(cls)tr.className=cls;const td=el("td");td.append(el("code",b));tr.append(el("td",a),td);t.append(tr)}
+async function api(u,b){const r=await fetch(u,b?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{});const j=await r.json();if(!r.ok)throw new Error(j.error||"Request failed");return j}
+function barColor(s){return s<3600?"--s0":s<86400?"--s1":s<31536000?"--s2":s<3.15e9?"--s3":"--s4"}
+function barWidth(s){return Math.max(4,Math.min(100,(Math.log10(s+1)/11)*100))}
+
+$("toggle").onclick=()=>{const h=$("pw").type==="password";$("pw").type=h?"text":"password";$("toggle").textContent=h?"Hide":"Show"};
+$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
+
+$("go").onclick=async()=>{
+  $("msg").textContent="";$("go").textContent="Analyzing...";
+  try{
+    const d=await api("/api/analyze",{password:$("pw").value});
+    $("empty").hidden=true;$("result").hidden=false;
+    const c=css(COL[d.score]);
+    $("ring").style.stroke=c;$("ring").style.strokeDashoffset=339.3*(1-(d.score+1)/5);
+    $("scoreNum").textContent=d.score;$("scoreNum").style.color=c;
+    $("verdict").textContent=LAB[d.score];$("verdict").style.color=c;
+    $("ent").textContent=d.entropy;$("len").textContent=d.length;$("pool").textContent=d.charset;
+
+    const tm=$("times");tm.replaceChildren();
+    d.scenarios.forEach(s=>{const w=el("div");const top=el("div",undefined,"top");top.append(el("span",s.name),el("b",s.time));
+      const tr=el("div",undefined,"track"),i=el("i");i.style.background=css(barColor(s.seconds));tr.append(i);w.append(top,tr);tm.append(w);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>i.style.width=barWidth(s.seconds)+"%"))});
+
+    const b=d.breach,st=$("state");
+    if(!b.checked){st.className="state na";$("stateTxt").textContent=b.error}
+    else if(b.breached){st.className="state bad";$("stateTxt").textContent="Exposed: found in "+b.count.toLocaleString()+" known breaches. Do not use it."}
+    else{st.className="state good";$("stateTxt").textContent="Not found in any known breach."}
+    $("f2").textContent="Sent prefix: "+b.prefix;
+    $("f3").textContent=b.checked?b.returned+" hashes returned":"Server returns matching hashes";
+
+    const p=$("patterns");p.replaceChildren();
+    if(d.patterns.length)d.patterns.forEach(x=>p.append(el("span",x,"pill")));else p.append(el("span","None detected","pill none"));
+    const tp=$("tips");tp.replaceChildren();
+    (d.tips.length?d.tips:["Looks good. Use a unique password for every account."]).forEach(t=>tp.append(el("li",t)));
+  }catch(e){$("msg").textContent=e.message}
+  $("go").textContent="Analyze password";
+};
+
+$("hashbtn").onclick=async()=>{
+  $("msg").textContent="";
+  try{
+    const d=await api("/api/hash-demo",{password:$("pw").value});
+    const t=$("hashes");t.replaceChildren();t.hidden=false;
+    row(t,"Plain text (never do this)",d.plain);row(t,"MD5, no salt",d.md5);row(t,"SHA-256, no salt",d.sha256);
+    row(t,"bcrypt + salt (run 1)",d.bcrypt,"ok");row(t,"bcrypt + salt (run 2)",d.bcrypt_again,"ok");
+    $("hashnote").hidden=false;
+    $("hashnote").textContent="The two bcrypt results differ because each uses a random salt. Hashing took about "+d.bcrypt_ms+" ms, which is deliberately slow and limits how fast an attacker can guess.";
+  }catch(e){$("msg").textContent=e.message;window.scrollTo({top:0,behavior:"smooth"})}
+};
+
+$("gen").onclick=async()=>{
+  const d=await api("/api/generate");const t=$("genout");t.replaceChildren();$("genCard").hidden=false;
+  row(t,"Random, 16 characters",d.password);row(t,"Passphrase (about "+d.passphrase_bits+" bits)",d.passphrase);
+  $("genCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+};
+</script>
+</body>
+</html>
